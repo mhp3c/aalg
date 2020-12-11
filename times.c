@@ -4,8 +4,8 @@
  *
  * Fichero: times.c
  * Autor: Marta Higuera and Miguel Blas
- * Version: 3.0
- * Fecha: 17-10-2020
+ * Version: 4.0
+ * Fecha: 04-12-2020
  *
  */
 
@@ -291,7 +291,6 @@ short generate_search_times(pfunc_search method, pfunc_key_generator generator, 
     return ERR;
   }
 
-
   for(i = 0, N = num_min; N <= num_max; i++, N = N+incr){
 
     if((average_search_time(method, generator, order, N, n_times, &(ptime[i]))) == ERR){
@@ -338,24 +337,16 @@ short generate_search_times(pfunc_search method, pfunc_key_generator generator, 
 short average_search_time(pfunc_search method, pfunc_key_generator generator, int order, int N, int n_times, PTIME_AA ptime){
 
   int *generate=NULL;
-  int i=0;
+  int i;
   int ob=0, ppos;
-  int *keys = NULL;
   double count = 0;
   clock_t start, end;
   PDICT pdict = NULL;
+  int *keys = NULL;
   
-  if(method == NULL || ptime == NULL || generator == NULL || n_times < 1 || N < 1 || (order < 0 && order > 1)){
+  if(method == NULL || ptime == NULL || n_times < 1 || N < 1 || generator == NULL || (order < 0 && order > 1)){
     return ERR;
   }
-
-  ptime->N = N;
-  ptime->n_elems = N*n_times;
-
-  ptime->min_ob = INT_MAX;
-  ptime->max_ob = 1;
-
-  ppos = NOT_FOUND;
 
   pdict = init_dictionary(N, order);
   if(pdict == NULL){
@@ -371,33 +362,45 @@ short average_search_time(pfunc_search method, pfunc_key_generator generator, in
   if((massive_insertion_dictionary(pdict, generate, N)) == ERR){
     free_dictionary(pdict);
     free(generate);
-    return ERR;    
+    return ERR;
   }
 
-  keys = (int*)malloc((N*n_times)*sizeof(keys[0]));
+  keys = (int*)malloc((n_times*N)*sizeof(keys[0]));
   if(keys == NULL){
     free_dictionary(pdict);
     free(generate);
-    return ERR; 
+    return ERR;
   }
 
-  generator(keys, N*n_times, N);
+  generator(keys, n_times*N, N); 
+
+  ptime->N = N;
+  ptime->n_elems = N*n_times;
+
+  ptime->min_ob = INT_MAX;
+  ptime->max_ob = 1;
+  
+  ppos = pdict->table[0];
 
   start = clock();
   if(start == (clock_t)-1){
+    
     free_dictionary(pdict);
     free(generate);
     free(keys);
-    return ERR; 
+
+    return ERR;
   }
 
-  for(i=0; i<N*n_times; i++){
+  for(i=0; i<(N*n_times); i++){
     
-    if((ob = search_dictionary(pdict, keys[i], &ppos, method)) == ERR){
+    if((ob = method(pdict->table, 0, pdict->n_data-1, keys[i], &ppos)) == ERR){
+    
       free_dictionary(pdict);
       free(generate);
       free(keys);
-      return ERR; 
+      
+      return ERR;
     } 
 
     if(ptime->min_ob > ob){
@@ -414,21 +417,25 @@ short average_search_time(pfunc_search method, pfunc_key_generator generator, in
 
   end = clock();
   if(end == (clock_t)-1){
+    
     free_dictionary(pdict);
     free(generate);
     free(keys);
-    return ERR; 
+
+    return ERR;
   }
 
   ptime->average_ob = (double)count / (double)(N*n_times);
 
-  ptime->time = (double)(end-start)*1000000 / (N*n_times) / CLOCKS_PER_SEC; /*we are changing the time to microseconds*/
+  ptime->time = (double)(end-start)*1000000 / (CLOCKS_PER_SEC*(N*n_times)); /*we are changing the time to microseconds*/
 
 
   free_dictionary(pdict);
   free(generate);
   free(keys);
-  
-  return OK; 
+
+
+  return OK;
+
 
 }

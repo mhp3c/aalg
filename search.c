@@ -59,6 +59,20 @@ void potential_key_generator(int *keys, int n_keys, int max){
 }
 
 
+/***************************************************/
+/* Function: init_dictionary    Date: 23-11-2020   */
+/*                                                 */
+/* Rutine that creates a dictionary                */
+/*                                                 */
+/* Input:                                          */
+/* int size: size of the dictionary                */
+/* int order: indicates of the dictionary is       */
+/*            order (1) or unsorted (0)            */
+/* Output:                                         */
+/* PDICT dictionary: a dictionary or NULL in case  */
+/*                   of error                      */  
+/***************************************************/
+
 PDICT init_dictionary (int size, char order){
 
   PDICT dictionary = NULL;
@@ -67,7 +81,7 @@ PDICT init_dictionary (int size, char order){
     return NULL;
   }
 
-  dictionary = (PDICT)malloc((size+1)*sizeof(dictionary[0]));
+  dictionary = (PDICT)malloc(sizeof(dictionary[0]));
   if (dictionary == NULL){
     return NULL;
   }
@@ -76,7 +90,7 @@ PDICT init_dictionary (int size, char order){
   dictionary->order = order;
   dictionary->n_data = 0;
 
-  dictionary->table = (int*)malloc((dictionary->size+1)*sizeof(dictionary->table[0]));
+  dictionary->table = (int*)malloc((size)*sizeof(dictionary->table[0]));
   if(dictionary->table == NULL){
     return NULL;
   }
@@ -86,6 +100,15 @@ PDICT init_dictionary (int size, char order){
 }
 
 
+/***************************************************/
+/* Function: free_dictioanry    Date: 23-11-2020   */
+/*                                                 */
+/* Rutine that frees a dictionary                  */
+/*                                                 */
+/* Input:                                          */
+/* PDICT dictionary: a dictionary                  */ 
+/***************************************************/
+
 void free_dictionary(PDICT pdict){
 	
   free(pdict->table);
@@ -93,6 +116,20 @@ void free_dictionary(PDICT pdict){
 
 }
 
+
+/***************************************************/
+/* Function: insert_dictionary    Date: 23-11-2020 */
+/*                                                 */
+/* Rutine that inserts the elements in the         */
+/* dictionary table                                */
+/*                                                 */
+/* Input:                                          */
+/* PDICT dictionary: a dictionary                  */ 
+/* int key: number/key to insert in the dictionary */
+/* Output:                                         */
+/* int count: number of KC (basic operation)       */
+/* or ERR in case of error                         */  
+/***************************************************/
 
 int insert_dictionary(PDICT pdict, int key){
 	
@@ -132,6 +169,23 @@ int insert_dictionary(PDICT pdict, int key){
 
 }
 
+
+/***************************************************/
+/* Function: massive_insertion_dictionary          */
+/* Date: 23-11-2020                                */
+/*                                                 */
+/* Rutine that inserts the elements in the         */
+/* dictionary table                                */
+/*                                                 */
+/* Input:                                          */
+/* PDICT dictionary: a dictionary                  */ 
+/* int n_keys: number of keys to search in the     */
+/*             dictionary                          */
+/* int *keys: pointer to the table of keys         */
+/* Output:                                         */
+/* int count: number of KC (basic operation)       */
+/* or ERR in case of error                         */  
+/***************************************************/
 
 int massive_insertion_dictionary (PDICT pdict,int *keys, int n_keys){
 	
@@ -269,12 +323,11 @@ int lin_auto_search(int *table,int F,int L,int key, int *ppos){
     count++;
     if(table[i] == key){
 
-      *(int*)ppos = i;
-
       if(i>0){
         swap2(&table[i], &table[i-1]);
       }
 
+      *(int*)ppos = i;
       return count;
     }
   }
